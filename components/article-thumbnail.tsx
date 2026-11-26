@@ -8,6 +8,7 @@ interface ArticleThumbnailProps {
   className?: string;
   emojiClassName?: string;
   imgClassName?: string;
+  priority?: boolean;
 }
 
 export default function ArticleThumbnail({
@@ -16,6 +17,7 @@ export default function ArticleThumbnail({
   className = '',
   emojiClassName = 'text-6xl',
   imgClassName = '',
+  priority = false,
 }: ArticleThumbnailProps) {
   const safeThumb = sanitizeThumbnail(thumbnail);
   const isImg = isImageThumbnail(safeThumb);
@@ -27,7 +29,9 @@ export default function ArticleThumbnail({
         <img
           src={safeThumb}
           alt={alt}
-          loading="lazy"
+          loading={priority ? 'eager' : 'lazy'}
+          decoding={priority ? 'sync' : 'async'}
+          fetchPriority={priority ? 'high' : 'auto'}
           className={`w-full h-full object-cover transition-transform duration-500 ease-out ${imgClassName}`}
         />
       </div>

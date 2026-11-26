@@ -1,15 +1,12 @@
 import type { MetadataRoute } from 'next';
 import { prisma } from '@/lib/prisma';
+import { CATEGORIES } from '@/lib/article-utils';
+import { getSiteUrl } from '@/lib/seo';
 
 export const dynamic = 'force-dynamic';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = (
-    process.env.AUTH_URL ||
-    process.env.NEXTAUTH_URL ||
-    process.env.RENDER_EXTERNAL_URL ||
-    'http://localhost:3000'
-  ).replace(/\/+$/, '');
+  const baseUrl = getSiteUrl();
 
   const staticRoutes: MetadataRoute.Sitemap = [
     {
@@ -30,6 +27,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: 'monthly',
       priority: 0.6,
     },
+    ...CATEGORIES.map((category) => ({
+      url: `${baseUrl}/?category=${encodeURIComponent(category)}`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly' as const,
+      priority: 0.7,
+    })),
   ];
 
   try {

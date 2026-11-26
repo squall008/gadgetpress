@@ -1,12 +1,8 @@
 import type { MetadataRoute } from 'next';
+import { getSiteUrl } from '@/lib/seo';
 
 export default function robots(): MetadataRoute.Robots {
-  const baseUrl = (
-    process.env.AUTH_URL ||
-    process.env.NEXTAUTH_URL ||
-    process.env.RENDER_EXTERNAL_URL ||
-    'http://localhost:3000'
-  ).replace(/\/+$/, '');
+  const baseUrl = getSiteUrl();
   return {
     rules: [
       {

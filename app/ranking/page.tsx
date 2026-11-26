@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
 import { prisma } from '@/lib/prisma';
 import { serializeArticle } from '@/lib/article-utils';
+import { buildAlternates, buildRankingGraphJsonLd } from '@/lib/seo';
+import JsonLd from '@/components/json-ld';
 import RankingClient from './_components/ranking-client';
 
 export const dynamic = 'force-dynamic';
@@ -8,9 +10,11 @@ export const dynamic = 'force-dynamic';
 export const metadata: Metadata = {
   title: 'スコアランキング・スペック比較',
   description: 'GadgetPress編集部の実機スコアランキングと、気になるガジェット同士のスペック比較ツール。',
+  alternates: buildAlternates('/ranking'),
   openGraph: {
     title: 'スコアランキング・スペック比較 | GadgetPress',
     description: 'GadgetPress編集部の実機スコアランキングと、気になるガジェット同士のスペック比較ツール。',
+    url: '/ranking',
     images: ['/og-image.png'],
   },
   twitter: {
@@ -36,9 +40,12 @@ export default async function RankingPage({
   const serialized = articles.map(serializeArticle);
 
   return (
-    <RankingClient
-      articles={serialized}
-      initialCompareId={Number.isNaN(compareId) ? undefined : compareId}
-    />
+    <>
+      <JsonLd data={buildRankingGraphJsonLd(serialized)} />
+      <RankingClient
+        articles={serialized}
+        initialCompareId={Number.isNaN(compareId) ? undefined : compareId}
+      />
+    </>
   );
 }

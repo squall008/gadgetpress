@@ -1,9 +1,13 @@
 import type { Metadata } from 'next';
 import { prisma } from '@/lib/prisma';
-import { serializeArticle } from '@/lib/article-utils';
+import { CATEGORIES, serializeArticle } from '@/lib/article-utils';
+import { buildAlternates, buildHomeGraphJsonLd } from '@/lib/seo';
 import HomeContent from '@/components/home-content';
+import JsonLd from '@/components/json-ld';
 
 export const dynamic = 'force-dynamic';
+
+const VALID_CATEGORIES = new Set<string>(CATEGORIES);
 
 export async function generateMetadata({
   searchParams,
@@ -20,19 +24,22 @@ export async function generateMetadata({
     return {
       title: { absolute: title },
       description,
+      alternates: buildAlternates('/'),
       robots: { index: false, follow: true },
-      openGraph: { title, description, images: ['/og-image.png'] },
+      openGraph: { title, description, url: '/', images: ['/og-image.png'] },
       twitter: { card: 'summary_large_image', title, description, images: ['/og-image.png'] },
     };
   }
 
-  if (category && category !== 'すべて') {
+  if (category && VALID_CATEGORIES.has(category)) {
+    const canonical = `/?category=${encodeURIComponent(category)}`;
     const title = `${category}のガジェットレビュー・比較一覧 | GadgetPress`;
     const description = `GadgetPress 編集部による「${category}」カテゴリの最新ガジェット実機レビュー・評価・比較記事一覧です。`;
     return {
       title: { absolute: title },
       description,
-      openGraph: { title, description, images: ['/og-image.png'] },
+      alternates: buildAlternates(canonical),
+      openGraph: { title, description, url: canonical, images: ['/og-image.png'] },
       twitter: { card: 'summary_large_image', title, description, images: ['/og-image.png'] },
     };
   }
@@ -43,7 +50,8 @@ export async function generateMetadata({
   return {
     title,
     description,
-    openGraph: { title, description, images: ['/og-image.png'] },
+    alternates: buildAlternates('/'),
+    openGraph: { title, description, url: '/', images: ['/og-image.png'] },
     twitter: { card: 'summary_large_image', title, description, images: ['/og-image.png'] },
   };
 }
@@ -62,12 +70,19 @@ export default async function HomePage({
   });
 
   const serialized = articles.map(serializeArticle);
+  const schemaCategory = VALID_CATEGORIES.has(initialCategory) ? initialCategory : undefined;
+  const schemaArticles = schemaCategory
+    ? serialized.filter((a) => a.category === schemaCategory)
+    : serialized;
 
   return (
-    <HomeContent
-      initialArticles={serialized}
-      initialCategory={initialCategory}
-      initialSearch={initialSearch}
-    />
+    <>
+      <JsonLd data={buildHomeGraphJsonLd(schemaArticles, schemaCategory)} />
+      <HomeContent
+        initialArticles={serialized}
+        initialCategory={initialCategory}
+        initialSearch={initialSearch}
+      />
+    </>
   );
 }

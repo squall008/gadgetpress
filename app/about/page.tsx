@@ -2,15 +2,20 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import Header from '@/components/header';
 import Footer from '@/components/footer';
+import Breadcrumbs from '@/components/breadcrumbs';
+import JsonLd from '@/components/json-ld';
+import { buildAboutGraphJsonLd, buildAlternates } from '@/lib/seo';
 import { FadeIn } from '@/components/ui/animate';
 import { ShieldCheck, Cpu, Scale, Award, ArrowRight } from 'lucide-react';
 
 export const metadata: Metadata = {
   title: 'GadgetPressについて・編集方針',
   description: 'GadgetPressのメディア理念、実機テストプロセス、および5段階評価スコアの明確な基準をご紹介します。',
+  alternates: buildAlternates('/about'),
   openGraph: {
     title: 'GadgetPressについて・編集方針 | GadgetPress',
     description: 'GadgetPressのメディア理念、実機テストプロセス、および5段階評価スコアの明確な基準をご紹介します。',
+    url: '/about',
     images: ['/og-image.png'],
   },
   twitter: {
@@ -49,9 +54,17 @@ const rubric = [
 export default function AboutPage() {
   return (
     <div className="min-h-screen flex flex-col">
+      <JsonLd data={buildAboutGraphJsonLd()} />
       <Header />
 
       <main className="flex-1 max-w-[960px] mx-auto w-full px-4 py-10">
+        <Breadcrumbs
+          items={[
+            { label: 'ホーム', href: '/' },
+            { label: 'GadgetPressについて・編集方針' },
+          ]}
+          className="mb-6"
+        />
         <FadeIn>
           <section className="rounded-2xl bg-gradient-to-br from-[#0a1628] via-[#0e203d] to-[#0a1628] text-white p-8 md:p-12 mb-12 border border-white/10 relative overflow-hidden">
             <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_hsl(190_100%_50%_/_0.2),_transparent_55%)] pointer-events-none" />

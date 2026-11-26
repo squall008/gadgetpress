@@ -5,6 +5,7 @@ import { ThemeProvider } from 'next-themes';
 import { Toaster } from 'sonner';
 import SessionProvider from '@/components/session-provider';
 import { ChunkLoadErrorHandler } from '@/components/chunk-load-error-handler';
+import { getSiteUrl, RSS_ALTERNATE_TYPES } from '@/lib/seo';
 import './globals.css';
 
 const dmSans = DM_Sans({ subsets: ['latin'], variable: '--font-sans', display: 'swap' });
@@ -24,12 +25,13 @@ export const metadata: Metadata = {
   },
   description:
     'PC・スマートフォン・デスク環境・オーディオなど、最新ガジェットを実機検証と独自スコアで深掘りレビューするテックオウンドメディア。',
-  metadataBase: new URL(
-    process.env.AUTH_URL ||
-      process.env.NEXTAUTH_URL ||
-      process.env.RENDER_EXTERNAL_URL ||
-      'http://localhost:3000'
-  ),
+  metadataBase: new URL(getSiteUrl()),
+  alternates: {
+    types: RSS_ALTERNATE_TYPES,
+  },
+  verification: process.env.GOOGLE_SITE_VERIFICATION
+    ? { google: process.env.GOOGLE_SITE_VERIFICATION }
+    : undefined,
   icons: {
     icon: '/favicon.svg',
     shortcut: '/favicon.svg',

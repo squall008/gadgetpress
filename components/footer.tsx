@@ -68,6 +68,14 @@ export default function Footer() {
                   編集部 管理コンソール
                 </Link>
               </li>
+              <li>
+                <a
+                  href="/feed.xml"
+                  className="text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  RSS フィード（最新記事配信）
+                </a>
+              </li>
             </ul>
           </div>
         </div>

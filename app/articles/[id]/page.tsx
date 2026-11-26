@@ -8,6 +8,8 @@ import {
   sanitizeThumbnail,
   serializeArticle,
 } from '@/lib/article-utils';
+import { buildAlternates, buildArticleGraphJsonLd, stripMarkdownToPlainText } from '@/lib/seo';
+import JsonLd from '@/components/json-ld';
 import ArticleDetail from './_components/article-detail';
 
 export const dynamic = 'force-dynamic';
@@ -29,29 +31,30 @@ export async function generateMetadata({
   }
 
   const article = serializeArticle(raw);
-  const plainBody = (article.content || '')
-    .replace(/[#*_`>\-\n\r]+/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
+  const plainBody = stripMarkdownToPlainText(article.content, 155);
   const description =
     article.summary?.trim() ||
-    (plainBody ? plainBody.slice(0, 140) : `${article.title}の実機レビュー・評価・スペック詳細です。`);
+    (plainBody || `${article.title}の実機レビュー・評価・スペック詳細です。`);
 
   const safeThumb = sanitizeThumbnail(article.thumbnail);
   const ogImage =
     article.visibility.thumbnail && isImageThumbnail(safeThumb) ? safeThumb : '/og-image.png';
+  const canonical = `/articles/${article.id}`;
 
   return {
     title: article.title,
     description,
+    alternates: buildAlternates(canonical),
     openGraph: {
       type: 'article',
       locale: 'ja_JP',
       siteName: 'GadgetPress',
+      url: canonical,
       title: `${article.title} | GadgetPress`,
       description,
       publishedTime: article.publishedAt,
       modifiedTime: article.updatedAt,
+      section: article.category,
       authors: article.visibility.author ? [article.author] : undefined,
       images: [
         {
@@ -101,11 +104,16 @@ export default async function ArticlePage({ params }: { params: Promise<{ id: st
     relatedRaw = [...relatedRaw, ...fallback];
   }
 
+  const serializedArticle = serializeArticle(article);
+
   return (
-    <ArticleDetail
-      article={serializeArticle(article)}
-      related={relatedRaw.map(serializeArticle)}
-      canEdit={canEdit}
-    />
+    <>
+      <JsonLd data={buildArticleGraphJsonLd(serializedArticle)} />
+      <ArticleDetail
+        article={serializedArticle}
+        related={relatedRaw.map(serializeArticle)}
+        canEdit={canEdit}
+      />
+    </>
   );
 }

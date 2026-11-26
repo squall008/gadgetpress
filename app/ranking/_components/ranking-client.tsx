@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Header from '@/components/header';
 import Footer from '@/components/footer';
 import ArticleThumbnail from '@/components/article-thumbnail';
+import Breadcrumbs from '@/components/breadcrumbs';
 import { FadeIn } from '@/components/ui/animate';
 import { ArticleDTO, CATEGORIES, getScoreLabel } from '@/lib/article-utils';
 import { Trophy, Star, GitCompare, ArrowRight, CheckCircle2 } from 'lucide-react';
@@ -60,6 +61,13 @@ export default function RankingClient({
       <Header />
 
       <main className="flex-1 max-w-[1200px] mx-auto w-full px-4 py-10">
+        <Breadcrumbs
+          items={[
+            { label: 'ホーム', href: '/' },
+            { label: 'スコアランキング・スペック比較' },
+          ]}
+          className="mb-6"
+        />
         {/* Page Header */}
         <FadeIn>
           <div className="rounded-2xl bg-gradient-to-br from-[#0a1628] via-[#0e203d] to-[#0a1628] text-white p-8 md:p-10 mb-10 border border-white/10 relative overflow-hidden">

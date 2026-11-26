@@ -7,6 +7,7 @@ import Header from '@/components/header';
 import Footer from '@/components/footer';
 import ArticleCard from '@/components/article-card';
 import ArticleThumbnail from '@/components/article-thumbnail';
+import Breadcrumbs from '@/components/breadcrumbs';
 import DeleteArticleDialog from '@/components/delete-article-dialog';
 import { SafeDate } from '@/components/safe-format';
 import { FadeIn, SlideIn, Stagger, StaggerItem } from '@/components/ui/animate';
@@ -21,6 +22,7 @@ import {
 import {
   Star,
   Calendar,
+  RefreshCw,
   ArrowLeft,
   ExternalLink,
   ShoppingCart,
@@ -185,6 +187,14 @@ export default function ArticleDetail({
       <Header />
 
       <main className="flex-1 max-w-[920px] mx-auto w-full px-4 py-8">
+        <Breadcrumbs
+          items={[
+            { label: 'ホーム', href: '/' },
+            { label: article.category, href: `/?category=${encodeURIComponent(article.category)}` },
+            { label: article.title },
+          ]}
+          className="mb-4"
+        />
         {/* Top Breadcrumb & Share */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
           <Link
@@ -271,14 +281,27 @@ export default function ArticleDetail({
                   {article.author}
                 </span>
               )}
-              <span className="inline-flex items-center gap-1.5">
+              <time dateTime={article.publishedAt} className="inline-flex items-center gap-1.5">
                 <Calendar className="w-4 h-4" />
+                公開:
                 <SafeDate
                   date={article.publishedAt}
                   options={{ year: 'numeric', month: 'long', day: 'numeric' }}
                   locale="ja-JP"
                 />
-              </span>
+              </time>
+              {article.updatedAt &&
+                article.updatedAt.slice(0, 10) !== article.publishedAt.slice(0, 10) && (
+                  <time dateTime={article.updatedAt} className="inline-flex items-center gap-1.5">
+                    <RefreshCw className="w-3.5 h-3.5" />
+                    更新:
+                    <SafeDate
+                      date={article.updatedAt}
+                      options={{ year: 'numeric', month: 'long', day: 'numeric' }}
+                      locale="ja-JP"
+                    />
+                  </time>
+                )}
               {vis.content && (
                 <span className="inline-flex items-center gap-1.5">
                   <Clock className="w-4 h-4" />
@@ -299,6 +322,7 @@ export default function ArticleDetail({
                 alt={article.title}
                 className="aspect-[16/9] w-full"
                 emojiClassName="text-8xl"
+                priority
               />
             </div>
           )}

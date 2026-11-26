@@ -114,6 +114,7 @@ export default function HeroSection({ article }: { article: ArticleDTO | null })
                     className="aspect-[16/10] w-full"
                     emojiClassName="text-[7rem] md:text-[8.5rem]"
                     imgClassName="group-hover:scale-105"
+                    priority
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-[#0a1628]/50 via-transparent to-transparent pointer-events-none" />
                 </div>
