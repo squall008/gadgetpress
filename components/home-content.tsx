@@ -8,7 +8,6 @@ import Footer from '@/components/footer';
 import HeroSection from '@/components/hero-section';
 import ArticleCard from '@/components/article-card';
 import CategoryFilter from '@/components/category-filter';
-import NewsletterBanner from '@/components/newsletter-banner';
 import ArticleThumbnail from '@/components/article-thumbnail';
 import { Stagger, StaggerItem, FadeIn } from '@/components/ui/animate';
 import { ArticleDTO, CATEGORIES } from '@/lib/article-utils';
@@ -155,7 +154,7 @@ export default function HomeContent({
 
               {/* Sort & Write Toolbar */}
               <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
-                {session?.user && (
+                {(session?.user as { role?: string } | undefined)?.role === 'admin' && (
                   <Link
                     href="/admin/articles/new"
                     className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold rounded-lg bg-[#00d4ff] text-[#0a1628] hover:bg-[#33ddff] transition-colors shadow-sm"
@@ -304,11 +303,6 @@ export default function HomeContent({
             </section>
           </FadeIn>
         )}
-
-        {/* Newsletter Digest CTA */}
-        <FadeIn>
-          <NewsletterBanner />
-        </FadeIn>
       </main>
 
       <Footer />

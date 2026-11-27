@@ -1,36 +1,9 @@
 import 'dotenv/config';
 import { PrismaClient } from '@prisma/client';
-import bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
 
 async function main() {
-  // Hidden test account (from original seed)
-  const testHash = await bcrypt.hash('sSaBAha89#', 10);
-  await prisma.user.upsert({
-    where: { email: 'abacus-845b1b8e@example.com' },
-    update: {},
-    create: {
-      email: 'abacus-845b1b8e@example.com',
-      name: 'Test Admin',
-      password: testHash,
-      role: 'admin',
-    },
-  });
-
-  // Main admin account
-  const adminHash = await bcrypt.hash('admin1234', 10);
-  await prisma.user.upsert({
-    where: { email: 'admin@gadgetpress.com' },
-    update: {},
-    create: {
-      email: 'admin@gadgetpress.com',
-      name: 'GadgetPress 管理者',
-      password: adminHash,
-      role: 'admin',
-    },
-  });
-
   const articles = [
     {
       id: 1,

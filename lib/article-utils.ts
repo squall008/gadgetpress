@@ -204,9 +204,7 @@ export function getScoreLabel(score: number): string {
 
 export function canManageArticle(
   user: { id?: string | null; role?: string | null } | null | undefined,
-  article: { userId?: string | null } | null | undefined
+  _article?: { userId?: string | null } | null | undefined
 ): boolean {
-  if (!user) return false;
-  if (user.role === 'admin') return true;
-  return Boolean(user.id && article?.userId && article.userId === user.id);
+  return Boolean(user && user.role === 'admin');
 }

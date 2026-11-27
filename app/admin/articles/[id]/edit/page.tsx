@@ -31,6 +31,9 @@ export default async function EditArticlePage({ params }: { params: Promise<{ id
   if (!user?.id) {
     redirect('/login');
   }
+  if (user.role !== 'admin') {
+    redirect('/');
+  }
 
   const { id } = await params;
   const articleId = parseInt(id, 10);

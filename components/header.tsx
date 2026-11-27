@@ -159,21 +159,25 @@ export default function Header({
 
           {session?.user ? (
             <div className="flex items-center gap-1.5 shrink-0">
-              <Link
-                href="/admin/articles/new"
-                className="flex items-center gap-1 px-2.5 py-1.5 text-[13px] font-semibold rounded-md whitespace-nowrap bg-[#00d4ff] text-[#0a1628] hover:bg-[#33ddff] transition-colors"
-              >
-                <PenSquare className="w-3.5 h-3.5 shrink-0" />
-                投稿
-              </Link>
-              <Link
-                href="/admin"
-                className="flex items-center gap-1 px-2.5 py-1.5 text-[13px] font-medium rounded-md whitespace-nowrap bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
-                title={isAdmin ? '管理コンソール' : '記事管理'}
-              >
-                <Settings className="w-3.5 h-3.5 shrink-0" />
-                管理
-              </Link>
+              {isAdmin && (
+                <>
+                  <Link
+                    href="/admin/articles/new"
+                    className="flex items-center gap-1 px-2.5 py-1.5 text-[13px] font-semibold rounded-md whitespace-nowrap bg-[#00d4ff] text-[#0a1628] hover:bg-[#33ddff] transition-colors"
+                  >
+                    <PenSquare className="w-3.5 h-3.5 shrink-0" />
+                    投稿
+                  </Link>
+                  <Link
+                    href="/admin"
+                    className="flex items-center gap-1 px-2.5 py-1.5 text-[13px] font-medium rounded-md whitespace-nowrap bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
+                    title="管理コンソール"
+                  >
+                    <Settings className="w-3.5 h-3.5 shrink-0" />
+                    管理
+                  </Link>
+                </>
+              )}
               <div
                 className="hidden xl:flex items-center gap-1.5 pl-1 pr-2 py-0.5 rounded-full bg-muted/70 border border-border/60 max-w-[120px]"
                 title={session.user.email || session.user.name || 'ログイン中'}
@@ -218,7 +222,7 @@ export default function Header({
 
         {/* Mobile & Tablet Buttons */}
         <div className="flex lg:hidden items-center gap-1 shrink-0">
-          {session?.user && (
+          {isAdmin && (
             <Link
               href="/admin/articles/new"
               aria-label="新規記事を投稿"
@@ -332,22 +336,26 @@ export default function Header({
                       <p className="text-xs text-muted-foreground truncate">{session.user.email}</p>
                     </div>
                   </div>
-                  <Link
-                    href="/admin/articles/new"
-                    className="flex items-center gap-2 px-3 py-2 text-sm font-semibold rounded-md text-[#0077b6] dark:text-[#00d4ff] hover:bg-muted"
-                    onClick={() => setMenuOpen(false)}
-                  >
-                    <PenSquare className="w-4 h-4" />
-                    新規記事を投稿
-                  </Link>
-                  <Link
-                    href="/admin"
-                    className="flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-md hover:bg-muted"
-                    onClick={() => setMenuOpen(false)}
-                  >
-                    <Settings className="w-4 h-4" />
-                    {isAdmin ? '管理コンソール' : '投稿した記事を管理'}
-                  </Link>
+                  {isAdmin && (
+                    <>
+                      <Link
+                        href="/admin/articles/new"
+                        className="flex items-center gap-2 px-3 py-2 text-sm font-semibold rounded-md text-[#0077b6] dark:text-[#00d4ff] hover:bg-muted"
+                        onClick={() => setMenuOpen(false)}
+                      >
+                        <PenSquare className="w-4 h-4" />
+                        新規記事を投稿
+                      </Link>
+                      <Link
+                        href="/admin"
+                        className="flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-md hover:bg-muted"
+                        onClick={() => setMenuOpen(false)}
+                      >
+                        <Settings className="w-4 h-4" />
+                        管理コンソール
+                      </Link>
+                    </>
+                  )}
                   <button
                     type="button"
                     onClick={() => signOut({ redirectTo: '/' })}

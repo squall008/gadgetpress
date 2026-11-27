@@ -1,9 +1,7 @@
 import NextAuth from 'next-auth';
-import CredentialsProvider from 'next-auth/providers/credentials';
 import Google from 'next-auth/providers/google';
 import { PrismaAdapter } from '@auth/prisma-adapter';
 import { prisma } from '@/lib/prisma';
-import bcrypt from 'bcryptjs';
 
 const googleClientId = process.env.AUTH_GOOGLE_ID || process.env.GOOGLE_CLIENT_ID || '';
 const googleClientSecret = process.env.AUTH_GOOGLE_SECRET || process.env.GOOGLE_CLIENT_SECRET || '';
@@ -15,7 +13,7 @@ export const isGoogleAuthConfigured = Boolean(
     !googleClientSecret.startsWith('your-')
 );
 
-function getConfiguredAdminEmails(): Set<string> {
+export function getConfiguredAdminEmails(): Set<string> {
   const raw = process.env.ADMIN_EMAILS || '';
   return new Set(
     raw
@@ -23,6 +21,27 @@ function getConfiguredAdminEmails(): Set<string> {
       .map((s) => s.trim().toLowerCase())
       .filter(Boolean)
   );
+}
+
+async function isAuthorizedAdminEmail(email: string): Promise<boolean> {
+  const normalized = email.trim().toLowerCase();
+  if (!normalized) return false;
+
+  const configured = getConfiguredAdminEmails();
+  if (configured.size > 0) {
+    return configured.has(normalized);
+  }
+
+  // Fail-closed fallback: if ADMIN_EMAILS is unset, allow only existing DB admin accounts
+  try {
+    const dbUser = await prisma.user.findUnique({
+      where: { email: normalized },
+      select: { role: true },
+    });
+    return dbUser?.role === 'admin';
+  } catch {
+    return false;
+  }
 }
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
@@ -45,72 +64,56 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           }),
         ]
       : []),
-    CredentialsProvider({
-      name: 'credentials',
-      credentials: {
-        email: { label: 'メールアドレス', type: 'email' },
-        password: { label: 'パスワード', type: 'password' },
-      },
-      async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) return null;
-        const email = String(credentials.email).trim().toLowerCase();
-        const user = await prisma.user.findUnique({
-          where: { email },
-        });
-        if (!user?.password) return null;
-        const isValid = await bcrypt.compare(credentials.password as string, user.password);
-        if (!isValid) return null;
-        return {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-          image: user.image,
-          role: user.role,
-        };
-      },
-    }),
   ],
   callbacks: {
-    async signIn({ account, profile }) {
-      if (account?.provider === 'google') {
-        const emailVerified = (profile as { email_verified?: boolean } | undefined)?.email_verified;
-        if (emailVerified === false) return false;
+    async signIn({ account, profile, user }) {
+      if (account?.provider !== 'google') {
+        return false;
       }
-      return true;
+      const googleProfile = profile as { email?: string; email_verified?: boolean } | undefined;
+      if (googleProfile?.email_verified === false) {
+        return false;
+      }
+      const email = googleProfile?.email || user?.email;
+      if (!email) {
+        return false;
+      }
+      return isAuthorizedAdminEmail(email);
     },
     async jwt({ token, user }) {
       if (user) {
-        token.role = (user as { role?: string }).role ?? 'user';
         token.id = user.id ?? '';
+        token.role = (user as { role?: string }).role ?? 'user';
         if (user.image) token.picture = user.image;
         if (user.name) token.name = user.name;
       }
-      // Keep role & id synced with DB and auto-promote emails listed in ADMIN_EMAILS
+
       const lookupEmail = (user?.email ?? token.email) as string | undefined;
       if (lookupEmail) {
         try {
           const normalized = lookupEmail.trim().toLowerCase();
-          const adminEmails = getConfiguredAdminEmails();
+          const authorized = await isAuthorizedAdminEmail(normalized);
           const dbUser = await prisma.user.findUnique({
             where: { email: normalized },
             select: { id: true, role: true, name: true, image: true },
           });
           if (dbUser) {
-            let role = dbUser.role;
-            if (adminEmails.has(normalized) && role !== 'admin') {
+            let role = authorized ? 'admin' : 'user';
+            if (dbUser.role !== role) {
               await prisma.user.update({
                 where: { id: dbUser.id },
-                data: { role: 'admin' },
+                data: { role },
               });
-              role = 'admin';
             }
             token.id = dbUser.id;
             token.role = role;
             if (dbUser.name) token.name = dbUser.name;
             if (dbUser.image) token.picture = dbUser.image;
+          } else {
+            token.role = authorized ? 'admin' : 'user';
           }
         } catch {
-          // ignore transient lookup errors
+          // keep previous token fields on transient DB errors
         }
       }
       return token;

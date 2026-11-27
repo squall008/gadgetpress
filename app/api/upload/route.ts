@@ -16,8 +16,12 @@ const MAX_BYTES = 5 * 1024 * 1024;
 export async function POST(request: Request) {
   try {
     const session = await auth();
-    if (!session?.user) {
+    const user = session?.user as { id?: string; role?: string } | undefined;
+    if (!user?.id) {
       return NextResponse.json({ error: 'ログインが必要です' }, { status: 401 });
+    }
+    if (user.role !== 'admin') {
+      return NextResponse.json({ error: '管理者権限が必要です' }, { status: 403 });
     }
 
     const formData = await request.formData();

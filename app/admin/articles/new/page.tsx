@@ -17,11 +17,14 @@ export default async function NewArticlePage() {
   if (!user?.id) {
     redirect('/login?callbackUrl=/admin/articles/new');
   }
+  if (user.role !== 'admin') {
+    redirect('/');
+  }
 
   return (
     <ArticleForm
       defaultAuthor={user.name || 'GadgetPress 編集部'}
-      isAdmin={user.role === 'admin'}
+      isAdmin={true}
     />
   );
 }

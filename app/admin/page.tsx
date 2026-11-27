@@ -19,22 +19,18 @@ export default async function AdminPage() {
   if (!user?.id) {
     redirect('/login?callbackUrl=/admin');
   }
+  if (user.role !== 'admin') {
+    redirect('/');
+  }
 
-  const isAdmin = user.role === 'admin';
-
-  const [articles, subscriberCount] = await Promise.all([
-    prisma.article.findMany({
-      where: isAdmin ? undefined : { userId: user.id },
-      orderBy: { publishedAt: 'desc' },
-    }),
-    isAdmin ? prisma.newsletterSubscriber.count() : Promise.resolve(0),
-  ]);
+  const articles = await prisma.article.findMany({
+    orderBy: { publishedAt: 'desc' },
+  });
 
   return (
     <AdminContent
       initialArticles={articles.map(serializeArticle)}
-      subscriberCount={subscriberCount}
-      isAdmin={isAdmin}
+      isAdmin={true}
     />
   );
 }

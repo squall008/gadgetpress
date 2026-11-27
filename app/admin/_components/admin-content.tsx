@@ -8,16 +8,14 @@ import DeleteArticleDialog from '@/components/delete-article-dialog';
 import { SafeDate } from '@/components/safe-format';
 import { FadeIn } from '@/components/ui/animate';
 import { ArticleDTO } from '@/lib/article-utils';
-import { Plus, Edit, Trash2, Star, Settings, ExternalLink, FileText, Mail, Award, PenSquare } from 'lucide-react';
+import { Plus, Edit, Trash2, Star, Settings, ExternalLink, FileText, Award, PenSquare } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function AdminContent({
   initialArticles,
-  subscriberCount = 0,
   isAdmin = false,
 }: {
   initialArticles: ArticleDTO[];
-  subscriberCount?: number;
   isAdmin?: boolean;
 }) {
   const [articles, setArticles] = useState<ArticleDTO[]>(initialArticles ?? []);
@@ -78,7 +76,7 @@ export default function AdminContent({
           </div>
 
           {/* KPI Summary Cards */}
-          <div className={`grid grid-cols-1 ${isAdmin ? 'sm:grid-cols-3' : 'sm:grid-cols-2'} gap-4 mb-8`}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
             <div className="rounded-xl bg-card border border-border/80 p-5 flex items-center gap-4">
               <div className="w-11 h-11 rounded-lg bg-primary/10 text-primary dark:text-[#00d4ff] flex items-center justify-center">
                 <FileText className="w-5 h-5" />
@@ -99,17 +97,6 @@ export default function AdminContent({
                 <p className="font-mono text-2xl font-bold">{avgScore}</p>
               </div>
             </div>
-            {isAdmin && (
-              <div className="rounded-xl bg-card border border-border/80 p-5 flex items-center gap-4">
-                <div className="w-11 h-11 rounded-lg bg-[#00b4d8]/15 text-[#0096c7] dark:text-[#00d4ff] flex items-center justify-center">
-                  <Mail className="w-5 h-5" />
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">ニュースレター購読者</p>
-                  <p className="font-mono text-2xl font-bold">{subscriberCount}</p>
-                </div>
-              </div>
-            )}
           </div>
 
           {/* Articles Table (Desktop) & Card List (Mobile) */}

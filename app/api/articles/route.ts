@@ -60,6 +60,9 @@ export async function POST(request: Request) {
     if (!user?.id) {
       return NextResponse.json({ error: 'ログインが必要です' }, { status: 401 });
     }
+    if (user.role !== 'admin') {
+      return NextResponse.json({ error: '管理者権限が必要です' }, { status: 403 });
+    }
 
     const body = await request.json();
     if (!body?.title || !String(body.title).trim()) {

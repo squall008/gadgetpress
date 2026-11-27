@@ -92,11 +92,3 @@ model Article {
   @@index([userId])
   @@map("articles")
 }
-
-model NewsletterSubscriber {
-  id        Int      @id @default(autoincrement())
-  email     String   @unique
-  createdAt DateTime @default(now()) @map("created_at")
-
-  @@map("newsletter_subscribers")
-}
