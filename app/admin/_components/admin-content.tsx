@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import Header from '@/components/header';
 import ArticleThumbnail from '@/components/article-thumbnail';
@@ -8,17 +8,48 @@ import DeleteArticleDialog from '@/components/delete-article-dialog';
 import { SafeDate } from '@/components/safe-format';
 import { FadeIn } from '@/components/ui/animate';
 import { ArticleDTO } from '@/lib/article-utils';
-import { Plus, Edit, Trash2, Star, Settings, ExternalLink, FileText, Award, PenSquare } from 'lucide-react';
+import {
+  Plus,
+  Edit,
+  Trash2,
+  Star,
+  Settings,
+  ExternalLink,
+  FileText,
+  Award,
+  PenSquare,
+  Eye,
+  BarChart3,
+  TrendingUp,
+  ArrowUpDown,
+} from 'lucide-react';
 import { toast } from 'sonner';
+
+export interface DailyViewPoint {
+  date: string;
+  label: string;
+  views: number;
+}
+
+export interface TrafficSummary {
+  todayViews: number;
+  last7DaysViews: number;
+  last30DaysViews: number;
+  totalViews: number;
+  dailySeries: DailyViewPoint[];
+}
 
 export default function AdminContent({
   initialArticles,
+  traffic,
   isAdmin = false,
 }: {
   initialArticles: ArticleDTO[];
+  traffic: TrafficSummary;
   isAdmin?: boolean;
 }) {
   const [articles, setArticles] = useState<ArticleDTO[]>(initialArticles ?? []);
+  const [sortBy, setSortBy] = useState<'latest' | 'views' | 'score'>('latest');
   const [deleteTarget, setDeleteTarget] = useState<ArticleDTO | null>(null);
   const [deleting, setDeleting] = useState(false);
 
@@ -26,6 +57,25 @@ export default function AdminContent({
     articles.length > 0
       ? (articles.reduce((acc, a) => acc + Number(a.score ?? 0), 0) / articles.length).toFixed(2)
       : '0.00';
+
+  const sortedArticles = useMemo(() => {
+    if (sortBy === 'views') {
+      return [...articles].sort(
+        (a, b) => (b.views ?? 0) - (a.views ?? 0) || b.publishedAt.localeCompare(a.publishedAt)
+      );
+    }
+    if (sortBy === 'score') {
+      return [...articles].sort(
+        (a, b) => Number(b.score ?? 0) - Number(a.score ?? 0) || b.publishedAt.localeCompare(a.publishedAt)
+      );
+    }
+    return [...articles].sort((a, b) => b.publishedAt.localeCompare(a.publishedAt));
+  }, [articles, sortBy]);
+
+  const maxDailyViews = useMemo(
+    () => Math.max(1, ...traffic.dailySeries.map((d) => d.views)),
+    [traffic.dailySeries]
+  );
 
   const handleDeleteConfirm = async () => {
     if (!deleteTarget) return;
@@ -57,13 +107,11 @@ export default function AdminContent({
               <div className="flex items-center gap-2">
                 <Settings className="w-6 h-6 text-[#00b4d8] dark:text-[#00d4ff]" />
                 <h1 className="font-display text-2xl font-bold tracking-tight">
-                  {isAdmin ? 'GadgetPress 記事管理コンソール' : 'あなたの投稿記事管理'}
+                  GadgetPress 記事管理コンソール
                 </h1>
               </div>
               <p className="text-sm text-muted-foreground mt-1">
-                {isAdmin
-                  ? 'すべてのレビュー記事の投稿・編集・削除・ヒーロー設定を管理します'
-                  : 'あなたが投稿した記事の作成・編集・削除を管理します'}
+                レビュー記事の投稿・編集・削除・ヒーロー設定およびサイトアクセス数（PV）を管理します
               </p>
             </div>
             <Link
@@ -76,35 +124,144 @@ export default function AdminContent({
           </div>
 
           {/* KPI Summary Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
-            <div className="rounded-xl bg-card border border-border/80 p-5 flex items-center gap-4">
-              <div className="w-11 h-11 rounded-lg bg-primary/10 text-primary dark:text-[#00d4ff] flex items-center justify-center">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
+            <div className="rounded-xl bg-card border border-border/80 p-4 sm:p-5 flex items-center gap-3.5">
+              <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-lg bg-primary/10 text-primary dark:text-[#00d4ff] flex items-center justify-center shrink-0">
                 <FileText className="w-5 h-5" />
               </div>
-              <div>
-                <p className="text-xs text-muted-foreground">
-                  {isAdmin ? '公開記事数' : 'あなたの投稿数'}
-                </p>
-                <p className="font-mono text-2xl font-bold">{articles.length}</p>
+              <div className="min-w-0">
+                <p className="text-xs text-muted-foreground truncate">公開記事数</p>
+                <p className="font-mono text-xl sm:text-2xl font-bold">{articles.length}</p>
               </div>
             </div>
-            <div className="rounded-xl bg-card border border-border/80 p-5 flex items-center gap-4">
-              <div className="w-11 h-11 rounded-lg bg-amber-500/10 text-amber-500 flex items-center justify-center">
+
+            <div className="rounded-xl bg-card border border-border/80 p-4 sm:p-5 flex items-center gap-3.5">
+              <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-lg bg-amber-500/10 text-amber-500 flex items-center justify-center shrink-0">
                 <Award className="w-5 h-5" />
               </div>
-              <div>
-                <p className="text-xs text-muted-foreground">平均レビュースコア</p>
-                <p className="font-mono text-2xl font-bold">{avgScore}</p>
+              <div className="min-w-0">
+                <p className="text-xs text-muted-foreground truncate">平均スコア</p>
+                <p className="font-mono text-xl sm:text-2xl font-bold">{avgScore}</p>
+              </div>
+            </div>
+
+            <div className="rounded-xl bg-card border border-border/80 p-4 sm:p-5 flex items-center gap-3.5">
+              <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-lg bg-[#00b4d8]/15 text-[#0096c7] dark:text-[#00d4ff] flex items-center justify-center shrink-0">
+                <TrendingUp className="w-5 h-5" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-xs text-muted-foreground truncate">今日 / 7日間のPV</p>
+                <p className="font-mono text-xl sm:text-2xl font-bold">
+                  {traffic.todayViews.toLocaleString()}
+                  <span className="text-xs font-normal text-muted-foreground ml-1">
+                    / {traffic.last7DaysViews.toLocaleString()}
+                  </span>
+                </p>
+              </div>
+            </div>
+
+            <div className="rounded-xl bg-card border border-border/80 p-4 sm:p-5 flex items-center gap-3.5">
+              <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-lg bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                <Eye className="w-5 h-5" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-xs text-muted-foreground truncate">
+                  累計PV（30日: {traffic.last30DaysViews.toLocaleString()}）
+                </p>
+                <p className="font-mono text-xl sm:text-2xl font-bold">
+                  {traffic.totalViews.toLocaleString()}
+                </p>
               </div>
             </div>
           </div>
 
+          {/* 7-Day PV Trend Chart */}
+          <div
+            className="rounded-xl bg-card border border-border/80 p-5 mb-8"
+            style={{ boxShadow: 'var(--shadow-sm)' }}
+          >
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
+              <div className="flex items-center gap-2">
+                <BarChart3 className="w-4 h-4 text-[#00b4d8] dark:text-[#00d4ff]" />
+                <h2 className="font-display font-bold text-sm sm:text-base">
+                  直近7日間のサイトアクセス推移（PV）
+                </h2>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                ボット除外・同一タブ10分内の重複リロード抑制（トップ・記事・ランキング・編集方針の合計）
+              </p>
+            </div>
+            <div className="grid grid-cols-7 gap-2 sm:gap-3 items-end h-32 pt-4">
+              {traffic.dailySeries.map((day, idx) => {
+                const isToday = idx === traffic.dailySeries.length - 1;
+                const heightPct = day.views > 0 ? Math.max(10, Math.round((day.views / maxDailyViews) * 100)) : 4;
+                return (
+                  <div key={day.date} className="flex flex-col items-center gap-1.5 h-full justify-end">
+                    <span className="font-mono text-[11px] font-semibold text-foreground/80">
+                      {day.views}
+                    </span>
+                    <div className="w-full flex-1 flex items-end justify-center">
+                      <div
+                        className={`w-full max-w-[44px] rounded-t-md transition-all ${
+                          day.views === 0
+                            ? 'bg-muted'
+                            : isToday
+                            ? 'bg-[#00d4ff]'
+                            : 'bg-[#00b4d8]/65 dark:bg-[#00d4ff]/55'
+                        }`}
+                        style={{ height: `${heightPct}%` }}
+                        title={`${day.date}: ${day.views} PV`}
+                      />
+                    </div>
+                    <span
+                      className={`font-mono text-[11px] ${
+                        isToday ? 'font-bold text-foreground' : 'text-muted-foreground'
+                      }`}
+                    >
+                      {day.label}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Sort Toolbar */}
+          {articles.length > 0 && (
+            <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+              <h2 className="font-display font-bold text-base">
+                公開記事一覧（{articles.length}件）
+              </h2>
+              <div className="inline-flex items-center gap-1 p-1 rounded-lg bg-muted/70 border border-border/60">
+                <ArrowUpDown className="w-3.5 h-3.5 text-muted-foreground ml-2 mr-1" />
+                {[
+                  { id: 'latest', label: '新着順' },
+                  { id: 'views', label: 'PV順' },
+                  { id: 'score', label: 'スコア順' },
+                ].map((opt) => (
+                  <button
+                    key={opt.id}
+                    type="button"
+                    onClick={() => setSortBy(opt.id as 'latest' | 'views' | 'score')}
+                    className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
+                      sortBy === opt.id
+                        ? 'bg-background text-foreground shadow-sm'
+                        : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Articles Table (Desktop) & Card List (Mobile) */}
-          {articles.length > 0 ? (
+          {sortedArticles.length > 0 ? (
             <>
               {/* Mobile Cards */}
               <div className="space-y-3 md:hidden">
-                {articles.map((article) => (
+                {sortedArticles.map((article) => (
                   <div
                     key={article.id}
                     className="rounded-xl bg-card border border-border/80 p-4 space-y-3"
@@ -131,6 +288,10 @@ export default function AdminContent({
                             <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
                             {Number(article.score ?? 0).toFixed(1)}
                           </span>
+                          <span className="inline-flex items-center gap-1 text-xs font-mono font-semibold text-emerald-600 dark:text-emerald-400">
+                            <Eye className="w-3.5 h-3.5" />
+                            {(article.views ?? 0).toLocaleString()} PV
+                          </span>
                           {isAdmin && article.isHero && (
                             <span className="px-1.5 py-0.5 text-[10px] font-semibold rounded bg-amber-100 text-amber-800 dark:bg-amber-900/35 dark:text-amber-300">
                               ★ ヒーロー
@@ -149,7 +310,6 @@ export default function AdminContent({
                             options={{ year: 'numeric', month: 'short', day: 'numeric' }}
                             locale="ja-JP"
                           />
-                          {article.priceRange ? ` ・ ${article.priceRange}` : ''}
                         </p>
                       </div>
                     </div>
@@ -195,13 +355,14 @@ export default function AdminContent({
                         <th className="px-4 py-3 text-left font-semibold">記事タイトル</th>
                         <th className="px-4 py-3 text-left font-semibold">カテゴリ</th>
                         <th className="px-4 py-3 text-left font-semibold">スコア</th>
+                        <th className="px-4 py-3 text-right font-semibold">閲覧数</th>
                         <th className="px-4 py-3 text-left font-semibold">公開日</th>
                         {isAdmin && <th className="px-4 py-3 text-left font-semibold">注目設定</th>}
                         <th className="px-4 py-3 text-right font-semibold">操作</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {articles.map((article) => (
+                      {sortedArticles.map((article) => (
                         <tr
                           key={article.id}
                           className="border-b border-border/60 last:border-0 hover:bg-muted/30 transition-colors"
@@ -244,6 +405,12 @@ export default function AdminContent({
                                 {Number(article.score ?? 0).toFixed(1)}
                               </span>
                             </div>
+                          </td>
+                          <td className="px-4 py-3 text-right whitespace-nowrap">
+                            <span className="inline-flex items-center justify-end gap-1 font-mono font-semibold text-emerald-600 dark:text-emerald-400">
+                              <Eye className="w-3.5 h-3.5" />
+                              {(article.views ?? 0).toLocaleString()}
+                            </span>
                           </td>
                           <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">
                             <SafeDate

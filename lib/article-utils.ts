@@ -47,6 +47,7 @@ export interface ArticleDTO {
   amazonUrl: string | null;
   officialUrl: string | null;
   isHero: boolean;
+  views: number;
   publishedAt: string;
   createdAt: string;
   updatedAt: string;
@@ -162,6 +163,7 @@ export function serializeArticle(raw: any): ArticleDTO {
     amazonUrl: raw?.amazonUrl ?? null,
     officialUrl: raw?.officialUrl ?? null,
     isHero: Boolean(raw?.isHero),
+    views: Number(raw?.views ?? 0),
     publishedAt: raw?.publishedAt instanceof Date ? raw.publishedAt.toISOString() : String(raw?.publishedAt ?? new Date().toISOString()),
     createdAt: raw?.createdAt instanceof Date ? raw.createdAt.toISOString() : String(raw?.createdAt ?? new Date().toISOString()),
     updatedAt: raw?.updatedAt instanceof Date ? raw.updatedAt.toISOString() : String(raw?.updatedAt ?? new Date().toISOString()),

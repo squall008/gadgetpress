@@ -5,6 +5,7 @@ import { ThemeProvider } from 'next-themes';
 import { Toaster } from 'sonner';
 import SessionProvider from '@/components/session-provider';
 import { ChunkLoadErrorHandler } from '@/components/chunk-load-error-handler';
+import { PageViewTracker } from '@/components/page-view-tracker';
 import { getSiteUrl, RSS_ALTERNATE_TYPES } from '@/lib/seo';
 import './globals.css';
 
@@ -80,6 +81,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
           <SessionProvider>
             <ChunkLoadErrorHandler />
+            <PageViewTracker />
             {children}
             <Toaster position="top-right" richColors />
           </SessionProvider>

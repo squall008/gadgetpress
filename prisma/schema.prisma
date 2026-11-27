@@ -82,6 +82,7 @@ model Article {
   amazonUrl   String?  @map("amazon_url")
   officialUrl String?  @map("official_url")
   isHero      Boolean  @default(false) @map("is_hero")
+  views       Int      @default(0)
   publishedAt DateTime @default(now()) @map("published_at")
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
@@ -90,5 +91,18 @@ model Article {
   @@index([isHero])
   @@index([publishedAt])
   @@index([userId])
+  @@index([views])
   @@map("articles")
+}
+
+model DailyPageView {
+  id        Int      @id @default(autoincrement())
+  date      String
+  path      String
+  views     Int      @default(0)
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([date, path])
+  @@index([date])
+  @@map("daily_page_views")
 }
