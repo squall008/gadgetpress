@@ -25,16 +25,16 @@ export default function HomeContent({
   initialSearch = '',
 }: HomeContentProps) {
   const { data: session } = useSession();
-  const [allArticles] = useState<ArticleDTO[]>(initialArticles ?? []);
+  const allArticles = useMemo(() => initialArticles ?? [], [initialArticles]);
   const [selectedCategory, setSelectedCategory] = useState(
-    initialCategory && (initialCategory === 'すべて' || CATEGORIES.includes(initialCategory as any))
+    initialCategory && (initialCategory === 'すべて' || CATEGORIES.includes(initialCategory as (typeof CATEGORIES)[number]))
       ? initialCategory
       : 'すべて'
   );
   const [searchQuery, setSearchQuery] = useState(initialSearch);
   const [sortBy, setSortBy] = useState<'latest' | 'score'>('latest');
 
-  // Sync URL query params cleanly without full reload
+  // Sync URL query params cleanly without clobbering Next.js history state
   useEffect(() => {
     if (typeof window === 'undefined') return;
     const params = new URLSearchParams();
@@ -42,7 +42,10 @@ export default function HomeContent({
     if (searchQuery.trim()) params.set('search', searchQuery.trim());
     const qs = params.toString();
     const nextUrl = qs ? `/?${qs}` : '/';
-    window.history.replaceState(null, '', nextUrl);
+    const currentUrl = `${window.location.pathname}${window.location.search}`;
+    if (currentUrl !== nextUrl) {
+      window.history.replaceState(window.history.state, '', nextUrl);
+    }
   }, [selectedCategory, searchQuery]);
 
   // Compute category counts from all articles

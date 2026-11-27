@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { prisma } from '@/lib/prisma';
-import { serializeArticle } from '@/lib/article-utils';
+import { parsePositiveIntId, serializeArticle } from '@/lib/article-utils';
 import { buildAlternates, buildRankingGraphJsonLd } from '@/lib/seo';
 import JsonLd from '@/components/json-ld';
 import RankingClient from './_components/ranking-client';
@@ -31,7 +31,7 @@ export default async function RankingPage({
   searchParams: Promise<{ compare?: string }>;
 }) {
   const params = await searchParams;
-  const compareId = params?.compare ? parseInt(params.compare, 10) : undefined;
+  const compareId = parsePositiveIntId(params?.compare) ?? undefined;
 
   const articles = await prisma.article.findMany({
     orderBy: [{ score: 'desc' }, { publishedAt: 'desc' }],
@@ -43,8 +43,9 @@ export default async function RankingPage({
     <>
       <JsonLd data={buildRankingGraphJsonLd(serialized)} />
       <RankingClient
+        key={compareId ?? 'default'}
         articles={serialized}
-        initialCompareId={Number.isNaN(compareId) ? undefined : compareId}
+        initialCompareId={compareId}
       />
     </>
   );

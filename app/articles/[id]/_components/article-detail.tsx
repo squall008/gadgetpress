@@ -38,6 +38,18 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 
+function toJstDateKey(iso: string | undefined | null): string {
+  if (!iso) return '';
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return '';
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Tokyo',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(d);
+}
+
 function renderInlineBold(text: string) {
   const parts = text.split(/(\*\*[^*]+\*\*)/g);
   return parts.map((part, idx) => {
@@ -291,7 +303,7 @@ export default function ArticleDetail({
                 />
               </time>
               {article.updatedAt &&
-                article.updatedAt.slice(0, 10) !== article.publishedAt.slice(0, 10) && (
+                toJstDateKey(article.updatedAt) !== toJstDateKey(article.publishedAt) && (
                   <time dateTime={article.updatedAt} className="inline-flex items-center gap-1.5">
                     <RefreshCw className="w-3.5 h-3.5" />
                     更新:
@@ -473,9 +485,7 @@ export default function ArticleDetail({
 
         {/* Main Editorial Article Content */}
         {vis.content && (
-          <FadeIn>
-            <article className="mb-12">{renderContent(article.content)}</article>
-          </FadeIn>
+          <article className="mb-12">{renderContent(article.content)}</article>
         )}
 
         {/* Product Specs Table */}

@@ -54,7 +54,12 @@ export default function RankingClient({
     return Array.from(keys);
   }, [leftArticle, rightArticle]);
 
-  const ratingKeys = ['デザイン・質感', 'パフォーマンス', '使い勝手', 'コストパフォーマンス'];
+  const ratingKeys = useMemo(() => {
+    const keys = new Set<string>(['デザイン・質感', 'パフォーマンス', '使い勝手', 'コストパフォーマンス']);
+    Object.keys(leftArticle?.ratings ?? {}).forEach((k) => keys.add(k));
+    Object.keys(rightArticle?.ratings ?? {}).forEach((k) => keys.add(k));
+    return Array.from(keys);
+  }, [leftArticle, rightArticle]);
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -110,10 +115,14 @@ export default function RankingClient({
                   ].map((slot, idx) => (
                     <div key={idx} className="p-5 space-y-4">
                       <div>
-                        <label className="block text-xs font-mono uppercase tracking-wider text-muted-foreground mb-1.5">
+                        <label
+                          htmlFor={`compare-slot-${idx}`}
+                          className="block text-xs font-mono uppercase tracking-wider text-muted-foreground mb-1.5"
+                        >
                           {slot.label}
                         </label>
                         <select
+                          id={`compare-slot-${idx}`}
                           value={slot.value}
                           onChange={(e) => slot.setter(Number(e.target.value))}
                           className="w-full px-3.5 py-2.5 text-sm font-medium rounded-lg bg-background border border-border focus:outline-none focus:ring-2 focus:ring-ring"
@@ -176,8 +185,10 @@ export default function RankingClient({
                   </div>
                   <div className="space-y-4">
                     {ratingKeys.map((key) => {
-                      const lVal = Number(leftArticle.ratings?.[key] ?? leftArticle.score);
-                      const rVal = Number(rightArticle.ratings?.[key] ?? rightArticle.score);
+                      const rawL = Number(leftArticle.ratings?.[key] ?? leftArticle.score);
+                      const rawR = Number(rightArticle.ratings?.[key] ?? rightArticle.score);
+                      const lVal = Number.isFinite(rawL) ? Math.min(5, Math.max(0, rawL)) : 0;
+                      const rVal = Number.isFinite(rawR) ? Math.min(5, Math.max(0, rawR)) : 0;
                       return (
                         <div key={key} className="grid grid-cols-1 md:grid-cols-12 items-center gap-1.5 md:gap-4 text-sm">
                           <div className="order-2 md:order-1 md:col-span-5 flex items-center gap-2">
@@ -188,7 +199,7 @@ export default function RankingClient({
                                 className={`h-full rounded-full ${
                                   lVal >= rVal ? 'bg-[#00b4d8]' : 'bg-primary/50'
                                 }`}
-                                style={{ width: `${(lVal / 5) * 100}%` }}
+                                style={{ width: `${Math.min(100, Math.max(0, (lVal / 5) * 100))}%` }}
                               />
                             </div>
                           </div>
@@ -202,7 +213,7 @@ export default function RankingClient({
                                 className={`h-full rounded-full ${
                                   rVal >= lVal ? 'bg-[#00b4d8]' : 'bg-primary/50'
                                 }`}
-                                style={{ width: `${(rVal / 5) * 100}%` }}
+                                style={{ width: `${Math.min(100, Math.max(0, (rVal / 5) * 100))}%` }}
                               />
                             </div>
                             <span className="font-mono text-xs font-bold w-8 text-right md:text-left shrink-0 order-1 md:order-2">{rVal.toFixed(1)}</span>
@@ -221,14 +232,18 @@ export default function RankingClient({
                         <CheckCircle2 className="w-4 h-4" />
                         主な強み
                       </h3>
-                      <ul className="space-y-1.5 text-xs sm:text-sm text-foreground/85">
-                        {(item.pros ?? []).slice(0, 3).map((p, i) => (
-                          <li key={i} className="flex items-start gap-2">
-                            <span className="text-emerald-500">✓</span>
-                            <span>{p}</span>
-                          </li>
-                        ))}
-                      </ul>
+                      {(item.pros ?? []).length > 0 ? (
+                        <ul className="space-y-1.5 text-xs sm:text-sm text-foreground/85">
+                          {(item.pros ?? []).slice(0, 3).map((p, i) => (
+                            <li key={i} className="flex items-start gap-2">
+                              <span className="text-emerald-500">✓</span>
+                              <span>{p}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p className="text-xs text-muted-foreground">記載なし</p>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -293,6 +308,11 @@ export default function RankingClient({
             </div>
 
             <div className="space-y-4">
+              {rankedArticles.length === 0 && (
+                <div className="text-center py-14 rounded-xl border border-dashed border-border bg-muted/20 text-sm text-muted-foreground">
+                  このカテゴリにはまだ記事がありません。
+                </div>
+              )}
               {rankedArticles.map((article, idx) => (
                 <div
                   key={article.id}

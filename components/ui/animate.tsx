@@ -1,20 +1,22 @@
 'use client'
 
-import { motion } from 'framer-motion'
+import { motion, useReducedMotion } from 'framer-motion'
 
-const viewportConfig = { once: true, margin: '-60px' as `${number}px` }
+// amount: 0 ensures tall sections and small mobile viewports trigger as soon as any pixel enters view
+const viewportConfig = { once: true, amount: 0 } as const
 
 export function FadeIn({
   children, delay = 0, duration = 0.4, className,
 }: {
   children: React.ReactNode; delay?: number; duration?: number; className?: string
 }) {
+  const prefersReduced = useReducedMotion()
   return (
     <motion.div
-      initial={{ opacity: 0, y: 8 }}
+      initial={prefersReduced ? false : { opacity: 0, y: 8 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={viewportConfig}
-      transition={{ duration, delay, ease: 'easeOut' }}
+      transition={{ duration: prefersReduced ? 0 : duration, delay: prefersReduced ? 0 : delay, ease: 'easeOut' }}
       className={className}
     >
       {children}
@@ -27,12 +29,13 @@ export function ScaleIn({
 }: {
   children: React.ReactNode; delay?: number; className?: string
 }) {
+  const prefersReduced = useReducedMotion()
   return (
     <motion.div
-      initial={{ opacity: 0, scale: 0.95 }}
+      initial={prefersReduced ? false : { opacity: 0, scale: 0.95 }}
       whileInView={{ opacity: 1, scale: 1 }}
       viewport={viewportConfig}
-      transition={{ duration: 0.3, delay, ease: 'easeOut' }}
+      transition={{ duration: prefersReduced ? 0 : 0.3, delay: prefersReduced ? 0 : delay, ease: 'easeOut' }}
       className={className}
     >
       {children}
@@ -52,12 +55,13 @@ export function SlideIn({
 }: {
   children: React.ReactNode; from?: keyof typeof slideDirections; delay?: number; className?: string
 }) {
+  const prefersReduced = useReducedMotion()
   return (
     <motion.div
-      initial={{ opacity: 0, ...slideDirections[from] }}
+      initial={prefersReduced ? false : { opacity: 0, ...slideDirections[from] }}
       whileInView={{ opacity: 1, x: 0, y: 0 }}
       viewport={viewportConfig}
-      transition={{ duration: 0.4, delay, ease: 'easeOut' }}
+      transition={{ duration: prefersReduced ? 0 : 0.4, delay: prefersReduced ? 0 : delay, ease: 'easeOut' }}
       className={className}
     >
       {children}
@@ -70,10 +74,11 @@ export function Stagger({
 }: {
   children: React.ReactNode; staggerDelay?: number; className?: string
 }) {
+  const prefersReduced = useReducedMotion()
   return (
     <motion.div
-      variants={{ show: { transition: { staggerChildren: staggerDelay } } }}
-      initial="hidden"
+      variants={{ show: { transition: { staggerChildren: prefersReduced ? 0 : staggerDelay } } }}
+      initial={prefersReduced ? false : 'hidden'}
       whileInView="show"
       viewport={viewportConfig}
       className={className}

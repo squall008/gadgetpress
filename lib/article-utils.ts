@@ -55,6 +55,63 @@ export interface ArticleDTO {
 
 export const CATEGORIES = ['PC', 'スマホ', 'デスク環境', 'レビュー', '比較'] as const;
 
+const VALID_CATEGORY_SET = new Set<string>(CATEGORIES);
+
+/** Strictly parse a positive 32-bit integer article ID (rejects suffixes like "12abc", <= 0, and INT4 overflow). */
+export function parsePositiveIntId(raw: string | undefined | null): number | null {
+  if (typeof raw !== 'string') return null;
+  const trimmed = raw.trim();
+  if (!/^[1-9]\d{0,8}$/.test(trimmed)) return null;
+  const n = Number(trimmed);
+  return Number.isSafeInteger(n) && n > 0 ? n : null;
+}
+
+/** Allow only safe same-origin relative callback paths (prevents open redirects like //evil.com or https://evil.com). */
+export function sanitizeCallbackUrl(raw: string | undefined | null, fallback = '/admin'): string {
+  if (typeof raw !== 'string') return fallback;
+  const trimmed = raw.trim();
+  if (!trimmed || !trimmed.startsWith('/') || trimmed.startsWith('//') || trimmed.startsWith('/\\')) {
+    return fallback;
+  }
+  if (/[\r\n\0]/.test(trimmed)) return fallback;
+  return trimmed;
+}
+
+export function isValidCategory(value: unknown): value is (typeof CATEGORIES)[number] {
+  return typeof value === 'string' && VALID_CATEGORY_SET.has(value);
+}
+
+export function parseBoundedScore(raw: unknown, fallback = 4.0): number {
+  const num = typeof raw === 'number' ? raw : Number(raw);
+  if (!Number.isFinite(num)) return fallback;
+  return Math.round(Math.min(5, Math.max(1, num)) * 10) / 10;
+}
+
+export function sanitizeStringRecord(raw: unknown): Record<string, string> {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return {};
+  const result: Record<string, string> = {};
+  for (const [k, v] of Object.entries(raw as Record<string, unknown>)) {
+    const key = String(k).trim().slice(0, 80);
+    if (key) {
+      result[key] = String(v ?? '').trim().slice(0, 300);
+    }
+  }
+  return result;
+}
+
+export function sanitizeRatingRecord(raw: unknown): Record<string, number> {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return {};
+  const result: Record<string, number> = {};
+  for (const [k, v] of Object.entries(raw as Record<string, unknown>)) {
+    const key = String(k).trim().slice(0, 80);
+    const num = Number(v);
+    if (key && Number.isFinite(num)) {
+      result[key] = Math.round(Math.min(5, Math.max(1, num)) * 10) / 10;
+    }
+  }
+  return result;
+}
+
 export const PRESET_IMAGES = [
   { label: 'MacBook Pro 14', path: '/images/articles/macbook-pro-14.jpg' },
   { label: 'ThinkPad X1 Carbon', path: '/images/articles/thinkpad-x1-carbon.jpg' },

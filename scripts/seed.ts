@@ -637,7 +637,7 @@ AirPods Proは軽やかな装着感で耳への圧迫感が少なく、長時間
     `SELECT setval(pg_get_serial_sequence('articles', 'id'), COALESCE((SELECT MAX(id) FROM articles), 1), true);`
   );
 
-  console.log(`Seed completed successfully (${articles.length} articles + admin accounts).`);
+  console.log(`Seed completed successfully (${articles.length} articles).`);
 }
 
 main()

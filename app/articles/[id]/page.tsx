@@ -5,6 +5,7 @@ import { notFound } from 'next/navigation';
 import {
   canManageArticle,
   isImageThumbnail,
+  parsePositiveIntId,
   sanitizeThumbnail,
   serializeArticle,
 } from '@/lib/article-utils';
@@ -20,8 +21,8 @@ export async function generateMetadata({
   params: Promise<{ id: string }>;
 }): Promise<Metadata> {
   const { id } = await params;
-  const articleId = parseInt(id, 10);
-  if (Number.isNaN(articleId)) {
+  const articleId = parsePositiveIntId(id);
+  if (articleId === null) {
     return { title: '記事が見つかりません', robots: { index: false, follow: false } };
   }
 
@@ -74,8 +75,8 @@ export async function generateMetadata({
 
 export default async function ArticlePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const articleId = parseInt(id, 10);
-  if (Number.isNaN(articleId)) notFound();
+  const articleId = parsePositiveIntId(id);
+  if (articleId === null) notFound();
 
   const [article, session] = await Promise.all([
     prisma.article.findUnique({ where: { id: articleId } }),

@@ -79,6 +79,7 @@ export default async function HomePage({
     <>
       <JsonLd data={buildHomeGraphJsonLd(schemaArticles, schemaCategory)} />
       <HomeContent
+        key={`${initialCategory}:${initialSearch}`}
         initialArticles={serialized}
         initialCategory={initialCategory}
         initialSearch={initialSearch}

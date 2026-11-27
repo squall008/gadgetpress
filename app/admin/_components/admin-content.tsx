@@ -152,9 +152,9 @@ export default function AdminContent({
               <div className="min-w-0">
                 <p className="text-xs text-muted-foreground truncate">今日 / 7日間のPV</p>
                 <p className="font-mono text-xl sm:text-2xl font-bold">
-                  {traffic.todayViews.toLocaleString()}
+                  {traffic.todayViews.toLocaleString('ja-JP')}
                   <span className="text-xs font-normal text-muted-foreground ml-1">
-                    / {traffic.last7DaysViews.toLocaleString()}
+                    / {traffic.last7DaysViews.toLocaleString('ja-JP')}
                   </span>
                 </p>
               </div>
@@ -166,10 +166,10 @@ export default function AdminContent({
               </div>
               <div className="min-w-0">
                 <p className="text-xs text-muted-foreground truncate">
-                  累計PV（30日: {traffic.last30DaysViews.toLocaleString()}）
+                  累計PV（30日: {traffic.last30DaysViews.toLocaleString('ja-JP')}）
                 </p>
                 <p className="font-mono text-xl sm:text-2xl font-bold">
-                  {traffic.totalViews.toLocaleString()}
+                  {traffic.totalViews.toLocaleString('ja-JP')}
                 </p>
               </div>
             </div>
@@ -290,7 +290,7 @@ export default function AdminContent({
                           </span>
                           <span className="inline-flex items-center gap-1 text-xs font-mono font-semibold text-emerald-600 dark:text-emerald-400">
                             <Eye className="w-3.5 h-3.5" />
-                            {(article.views ?? 0).toLocaleString()} PV
+                            {(article.views ?? 0).toLocaleString('ja-JP')} PV
                           </span>
                           {isAdmin && article.isHero && (
                             <span className="px-1.5 py-0.5 text-[10px] font-semibold rounded bg-amber-100 text-amber-800 dark:bg-amber-900/35 dark:text-amber-300">
@@ -409,7 +409,7 @@ export default function AdminContent({
                           <td className="px-4 py-3 text-right whitespace-nowrap">
                             <span className="inline-flex items-center justify-end gap-1 font-mono font-semibold text-emerald-600 dark:text-emerald-400">
                               <Eye className="w-3.5 h-3.5" />
-                              {(article.views ?? 0).toLocaleString()}
+                              {(article.views ?? 0).toLocaleString('ja-JP')}
                             </span>
                           </td>
                           <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">

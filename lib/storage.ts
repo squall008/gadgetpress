@@ -114,6 +114,7 @@ async function uploadToCloudinary(
   const res = await fetch(endpoint, {
     method: 'POST',
     body: formData,
+    signal: AbortSignal.timeout(20_000),
   });
 
   if (!res.ok) {
@@ -150,6 +151,7 @@ async function uploadToSupabaseStorage(
       'x-upsert': 'false',
     },
     body: new Uint8Array(buffer),
+    signal: AbortSignal.timeout(20_000),
   });
 
   if (!res.ok) {

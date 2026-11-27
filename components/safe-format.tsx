@@ -15,6 +15,10 @@ import { useMounted } from '@/components/client-only'
 const DEFAULT_LOCALE = 'en-US'
 const DEFAULT_TIME_ZONE = 'UTC'
 
+function resolveDefaultTimeZone(locale: string): string {
+  return locale.toLowerCase().startsWith('ja') ? 'Asia/Tokyo' : DEFAULT_TIME_ZONE
+}
+
 type SafeDateProps = {
   date: Date | string | number
   options?: Intl.DateTimeFormatOptions
@@ -26,11 +30,14 @@ type SafeDateProps = {
 export function SafeDate({ date, options, locale = DEFAULT_LOCALE, localize = false, className }: SafeDateProps) {
   const mounted = useMounted()
   const d = date instanceof Date ? date : new Date(date)
+  if (Number.isNaN(d.getTime())) {
+    return <span className={className}>—</span>
+  }
   const useLocal = localize && mounted
   // toLocaleDateString throws on timeStyle (and toLocaleTimeString on dateStyle),
   // so date+time option mixes render via toLocaleString.
   const text = (options?.timeStyle ? d.toLocaleString : d.toLocaleDateString).call(d, useLocal ? undefined : locale, {
-    timeZone: useLocal ? undefined : DEFAULT_TIME_ZONE,
+    timeZone: useLocal ? undefined : resolveDefaultTimeZone(locale),
     ...options,
   })
   return (
@@ -43,9 +50,12 @@ export function SafeDate({ date, options, locale = DEFAULT_LOCALE, localize = fa
 export function SafeTime({ date, options, locale = DEFAULT_LOCALE, localize = false, className }: SafeDateProps) {
   const mounted = useMounted()
   const d = date instanceof Date ? date : new Date(date)
+  if (Number.isNaN(d.getTime())) {
+    return <span className={className}>—</span>
+  }
   const useLocal = localize && mounted
   const text = (options?.dateStyle ? d.toLocaleString : d.toLocaleTimeString).call(d, useLocal ? undefined : locale, {
-    timeZone: useLocal ? undefined : DEFAULT_TIME_ZONE,
+    timeZone: useLocal ? undefined : resolveDefaultTimeZone(locale),
     ...options,
   })
   return (

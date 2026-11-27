@@ -71,7 +71,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         return false;
       }
       const googleProfile = profile as { email?: string; email_verified?: boolean } | undefined;
-      if (googleProfile?.email_verified === false) {
+      if (googleProfile?.email_verified !== true) {
         return false;
       }
       const email = googleProfile?.email || user?.email;
@@ -110,7 +110,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             if (dbUser.name) token.name = dbUser.name;
             if (dbUser.image) token.picture = dbUser.image;
           } else {
-            token.role = authorized ? 'admin' : 'user';
+            // User no longer exists in DB — clear stale credentials so deleted accounts cannot retain access
+            token.id = '';
+            token.role = 'user';
           }
         } catch {
           // keep previous token fields on transient DB errors

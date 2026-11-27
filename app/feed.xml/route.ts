@@ -21,10 +21,10 @@ function escapeXml(value: string): string {
 }
 
 function guessMimeType(url: string): string {
-  const lower = url.toLowerCase();
-  if (lower.endsWith('.png')) return 'image/png';
-  if (lower.endsWith('.webp')) return 'image/webp';
-  if (lower.endsWith('.gif')) return 'image/gif';
+  const cleanPath = url.split('?')[0].split('#')[0].toLowerCase();
+  if (cleanPath.endsWith('.png')) return 'image/png';
+  if (cleanPath.endsWith('.webp')) return 'image/webp';
+  if (cleanPath.endsWith('.gif')) return 'image/gif';
   return 'image/jpeg';
 }
 

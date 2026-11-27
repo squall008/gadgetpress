@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import Header from '@/components/header';
 import ArticleThumbnail from '@/components/article-thumbnail';
@@ -13,6 +14,7 @@ import {
   CATEGORIES,
   DEFAULT_VISIBILITY,
   PRESET_IMAGES,
+  parseBoundedScore,
 } from '@/lib/article-utils';
 import {
   Save,
@@ -197,7 +199,7 @@ export default function ArticleForm({
       const fd = new FormData();
       fd.append('file', file);
       const res = await fetch('/api/upload', { method: 'POST', body: fd });
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
       if (res.ok && data?.url) {
         setThumbnail(data.url);
         setThumbMode('image');
@@ -254,7 +256,7 @@ export default function ArticleForm({
 
     const specs: Record<string, string> = {};
     specsText.split('\n').forEach((line) => {
-      const idx = line.indexOf(':');
+      const idx = line.search(/[:：]/);
       if (idx > 0) {
         const key = line.slice(0, idx).trim();
         const val = line.slice(idx + 1).trim();
@@ -264,11 +266,11 @@ export default function ArticleForm({
 
     const ratings: Record<string, number> = {};
     ratingsText.split('\n').forEach((line) => {
-      const idx = line.indexOf(':');
+      const idx = line.search(/[:：]/);
       if (idx > 0) {
         const key = line.slice(0, idx).trim();
         const val = parseFloat(line.slice(idx + 1).trim());
-        if (key && !Number.isNaN(val)) ratings[key] = Math.min(5, Math.max(1, val));
+        if (key && Number.isFinite(val)) ratings[key] = Math.round(Math.min(5, Math.max(1, val)) * 10) / 10;
       }
     });
 
@@ -276,7 +278,7 @@ export default function ArticleForm({
       title: title.trim(),
       category,
       thumbnail: thumbnail.trim() || '📱',
-      score: Math.min(5, Math.max(1, parseFloat(score) || 4.0)),
+      score: parseBoundedScore(score, 4.0),
       author: author.trim() || defaultAuthor,
       priceRange: priceRange.trim() || null,
       summary,
@@ -319,14 +321,13 @@ export default function ArticleForm({
     <div className="min-h-screen flex flex-col bg-background">
       <Header />
       <main className="flex-1 max-w-[920px] mx-auto w-full px-4 py-8">
-        <button
-          type="button"
-          onClick={() => router.back()}
+        <Link
+          href="/admin"
           className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-6"
         >
           <ArrowLeft className="w-4 h-4" />
-          戻る
-        </button>
+          管理一覧へ戻る
+        </Link>
 
         <FadeIn>
           <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
@@ -770,13 +771,12 @@ export default function ArticleForm({
                 )}
               </div>
               <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center gap-2.5 sm:gap-3">
-                <button
-                  type="button"
-                  onClick={() => router.back()}
+                <Link
+                  href="/admin"
                   className="px-6 py-2.5 rounded-lg text-sm font-medium bg-muted hover:bg-muted/80 transition-colors text-center"
                 >
                   キャンセル
-                </button>
+                </Link>
                 <button
                   type="submit"
                   disabled={loading}

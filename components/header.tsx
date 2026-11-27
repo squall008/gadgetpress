@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import { useSession, signOut } from 'next-auth/react';
 import { useRouter, usePathname } from 'next/navigation';
@@ -23,19 +23,18 @@ export default function Header({
 }: HeaderProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState(searchValue);
+  const [localSearchQuery, setLocalSearchQuery] = useState(searchValue);
   const { data: session } = useSession();
   const router = useRouter();
   const pathname = usePathname();
 
-  useEffect(() => {
-    setSearchQuery(searchValue);
-  }, [searchValue]);
+  const searchQuery = onSearch ? searchValue : localSearchQuery;
 
   const handleSearchInput = (q: string) => {
-    setSearchQuery(q);
     if (onSearch) {
       onSearch(q);
+    } else {
+      setLocalSearchQuery(q);
     }
   };
 
@@ -71,7 +70,8 @@ export default function Header({
     }
     if (onSearch && pathname === '/') {
       onSearch('');
-      setSearchQuery('');
+    } else {
+      setLocalSearchQuery('');
     }
   };
 
